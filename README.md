@@ -1,5 +1,9 @@
 # llm-pricing
 
+[![CI](https://github.com/KUKUNIK/llm-pricing/actions/workflows/ci.yml/badge.svg)](https://github.com/KUKUNIK/llm-pricing/actions/workflows/ci.yml)
+[![npm version](https://img.shields.io/npm/v/llm-pricing.svg)](https://www.npmjs.com/package/llm-pricing)
+[![license](https://img.shields.io/badge/license-MIT-green.svg)](./LICENSE)
+
 A tiny, dependency-light catalog of public per-token prices for popular LLMs, plus a cost calculator. No API calls, no API keys, no surprises.
 
 > Status: `0.1.0` — prices change frequently. Always cross-check against the vendor's pricing page before billing on these numbers.
