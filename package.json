@@ -1,6 +1,6 @@
 {
   "name": "llm-pricing",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A small, dependency-light table of public per-token prices for popular LLMs, plus a cost calculator. No API calls, no surprises.",
   "type": "module",
   "main": "./dist/index.js",

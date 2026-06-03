@@ -6,7 +6,7 @@
 
 A tiny, dependency-light catalog of public per-token prices for popular LLMs, plus a cost calculator. No API calls, no API keys, no surprises.
 
-> Status: `0.1.0` — prices change frequently. Always cross-check against the vendor's pricing page before billing on these numbers.
+> Status: `0.2.0` — prices change frequently. Always cross-check against the vendor's pricing page before billing on these numbers.
 
 ## What it is
 
@@ -70,6 +70,30 @@ llm-cost compare gpt-4o claude-3-5-sonnet gemini-1.5-pro \
 
 # JSON for piping
 llm-cost calc gpt-4o --input 1000 --output 200 --json | jq .totalUsd
+
+# CSV for spreadsheets
+llm-cost list --format csv > prices.csv
+llm-cost list --vendor openai --format csv | column -ts,
+```
+
+### CSV export
+
+`llm-cost list --format csv` emits an RFC 4180 CSV (CRLF line endings,
+double-quoted cells where needed). Drop it straight into Google Sheets,
+Excel, or `csvkit` for analysis. The same columns are available
+programmatically via the `toCsv()` helper:
+
+```ts
+import { listModels, toCsv } from "llm-pricing";
+import { writeFileSync } from "node:fs";
+
+writeFileSync("prices.csv", toCsv(listModels()));
+
+// Or pick a subset of columns:
+writeFileSync(
+  "prices-min.csv",
+  toCsv(listModels(), { columns: ["id", "vendor", "inputUsdPerMillion", "outputUsdPerMillion"] }),
+);
 ```
 
 ## Output example

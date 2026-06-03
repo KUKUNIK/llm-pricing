@@ -1,9 +1,10 @@
 import { Command } from "commander";
 import { calculateCost, estimateTokens } from "./lib/calculator.js";
 import { getPricing, listModels } from "./lib/catalog.js";
+import { toCsv } from "./lib/format.js";
 import type { ModelPricing } from "./lib/types.js";
 
-const VERSION = "0.1.0";
+const VERSION = "0.2.0";
 
 function fmtUsd(n: number): string {
   if (n === 0) return "$0";
@@ -22,11 +23,28 @@ async function main(): Promise<void> {
     .command("list")
     .description("list all known models in the catalog")
     .option("--vendor <name>", "filter by vendor (openai | anthropic | google | xai)")
-    .action((opts: { vendor?: string }) => {
+    .option("--format <fmt>", "output format: text | json | csv", "text")
+    .action((opts: { vendor?: string; format: string }) => {
       const all = listModels();
       const filtered = opts.vendor
         ? all.filter((m) => m.vendor === opts.vendor)
         : all;
+      const format = opts.format.toLowerCase();
+      if (format === "csv") {
+        process.stdout.write(toCsv(filtered));
+        return;
+      }
+      if (format === "json") {
+        process.stdout.write(`${JSON.stringify(filtered, null, 2)}\n`);
+        return;
+      }
+      if (format !== "text") {
+        process.stderr.write(
+          `error: unknown format "${opts.format}". expected text | json | csv\n`,
+        );
+        process.exitCode = 1;
+        return;
+      }
       const rows = filtered.map((m) => ({
         id: m.id,
         vendor: m.vendor,

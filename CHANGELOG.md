@@ -4,6 +4,22 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-06-03
+
+### Added
+
+- `toCsv(models, options?)` library export — emit the catalog (or any
+  subset) as RFC 4180 CSV (CRLF line endings, header row, escaped cells).
+- `llm-cost list --format <text|json|csv>` CLI flag. `csv` is suitable for
+  piping into spreadsheets or `csvkit`; `json` was already accepted on
+  `calc` and is now also available on `list`.
+- `CsvColumn` / `ToCsvOptions` types for picking custom column subsets.
+
+### Changed
+
+- CLI version string bumped to `0.2.0`. No breaking changes to the
+  library API — `0.1.0` callers continue to work.
+
 ## [0.1.0] - 2026-06-01
 
 ### Added
