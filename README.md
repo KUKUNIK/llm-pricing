@@ -74,7 +74,17 @@ llm-cost calc gpt-4o --input 1000 --output 200 --json | jq .totalUsd
 # CSV for spreadsheets
 llm-cost list --format csv > prices.csv
 llm-cost list --vendor openai --format csv | column -ts,
+
+# Also show the bill in KRW (or any currency) at a rate you control
+llm-cost calc gpt-4o --input 100000 --output 5000 \
+  --currency KRW --rate 1320
 ```
+
+`--currency` and `--rate` must be passed together. The package
+intentionally bundles no live FX data — supply the rate you trust
+(daily average from your accounting system, a screenshot from
+Bloomberg, whatever). In `--json` mode the result gains a
+`currency: { code, rate, totalAmount }` field.
 
 ### CSV export
 
