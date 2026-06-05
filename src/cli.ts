@@ -1,7 +1,7 @@
 import { Command } from "commander";
 import { calculateCost, estimateTokens } from "./lib/calculator.js";
 import { getPricing, listModels } from "./lib/catalog.js";
-import { toCsv } from "./lib/format.js";
+import { fmtCurrency, toCsv } from "./lib/format.js";
 import type { ModelPricing } from "./lib/types.js";
 
 const VERSION = "0.2.0";
@@ -66,6 +66,14 @@ async function main(): Promise<void> {
     .option("--cache-write <n>", "cache write tokens", "0")
     .option("--text <string>", "input text to estimate token count from (overrides --input)")
     .option("--json", "emit machine-readable JSON")
+    .option(
+      "--currency <code>",
+      "also show total in this currency (requires --rate). Display-only code, e.g. KRW",
+    )
+    .option(
+      "--rate <n>",
+      "units of --currency per 1 USD (no live FX bundled — provide your own rate)",
+    )
     .action(
       (
         modelId: string,
@@ -76,8 +84,29 @@ async function main(): Promise<void> {
           cacheWrite: string;
           text?: string;
           json?: boolean;
+          currency?: string;
+          rate?: string;
         },
       ) => {
+        if ((opts.currency && !opts.rate) || (opts.rate && !opts.currency)) {
+          process.stderr.write(
+            "error: --currency and --rate must be passed together\n",
+          );
+          process.exitCode = 2;
+          return;
+        }
+        let currency: { code: string; rate: number } | undefined;
+        if (opts.currency && opts.rate) {
+          const rate = Number.parseFloat(opts.rate);
+          if (!Number.isFinite(rate) || rate <= 0) {
+            process.stderr.write(
+              `error: --rate must be a positive number, got ${opts.rate}\n`,
+            );
+            process.exitCode = 2;
+            return;
+          }
+          currency = { code: opts.currency, rate };
+        }
         const inputTokens = opts.text
           ? estimateTokens(opts.text)
           : Number.parseInt(opts.input, 10);
@@ -88,10 +117,20 @@ async function main(): Promise<void> {
           cacheWriteTokens: Number.parseInt(opts.cacheWrite, 10),
         });
         if (opts.json) {
-          process.stdout.write(`${JSON.stringify(breakdown, null, 2)}\n`);
+          const payload = currency
+            ? {
+                ...breakdown,
+                currency: {
+                  code: currency.code,
+                  rate: currency.rate,
+                  totalAmount: breakdown.totalUsd * currency.rate,
+                },
+              }
+            : breakdown;
+          process.stdout.write(`${JSON.stringify(payload, null, 2)}\n`);
           return;
         }
-        printBreakdown(breakdown);
+        printBreakdown(breakdown, currency);
       },
     );
 
@@ -154,7 +193,10 @@ async function main(): Promise<void> {
   }
 }
 
-function printBreakdown(b: ReturnType<typeof calculateCost>): void {
+function printBreakdown(
+  b: ReturnType<typeof calculateCost>,
+  currency?: { code: string; rate: number },
+): void {
   const lines: string[] = [];
   lines.push(`model:      ${b.modelId} (vendor: ${b.pricing.vendor})`);
   lines.push(`pricing:    input $${b.pricing.inputUsdPerMillion}/M  output $${b.pricing.outputUsdPerMillion}/M (as of ${b.pricing.asOf})`);
@@ -164,6 +206,11 @@ function printBreakdown(b: ReturnType<typeof calculateCost>): void {
   if (b.cacheWriteUsd) lines.push(`cache-write: ${fmtUsd(b.cacheWriteUsd)}`);
   lines.push(`output:     ${fmtUsd(b.outputUsd)}`);
   lines.push(`total:      ${fmtUsd(b.totalUsd)}`);
+  if (currency) {
+    lines.push(
+      `total ${currency.code}: ${fmtCurrency(b.totalUsd, { rate: currency.rate, symbol: currency.code })} (at ${currency.rate} ${currency.code}/USD)`,
+    );
+  }
   process.stdout.write(`${lines.join("\n")}\n`);
 }
 

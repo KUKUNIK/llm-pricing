@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { toCsv } from "../src/lib/format.js";
+import { fmtCurrency, toCsv } from "../src/lib/format.js";
 import { listModels } from "../src/lib/catalog.js";
 import type { ModelPricing } from "../src/lib/types.js";
 
@@ -84,5 +84,24 @@ describe("toCsv", () => {
   it("emits only a header for an empty catalog", () => {
     const csv = toCsv([]);
     expect(csv.split("\r\n").length).toBe(2);
+  });
+});
+
+describe("fmtCurrency", () => {
+  it("converts USD by a user-supplied rate and prefixes the symbol", () => {
+    expect(fmtCurrency(0.005, { rate: 1320, symbol: "KRW" })).toBe("KRW 6.60");
+    expect(fmtCurrency(1, { rate: 150, symbol: "JPY", fractionDigits: 0 })).toBe(
+      "JPY 150",
+    );
+  });
+
+  it("formats without a symbol when omitted", () => {
+    expect(fmtCurrency(2, { rate: 0.92 })).toBe("1.84");
+  });
+
+  it("rejects non-positive or non-finite rates", () => {
+    expect(() => fmtCurrency(1, { rate: 0 })).toThrow(/positive finite/);
+    expect(() => fmtCurrency(1, { rate: -1 })).toThrow(/positive finite/);
+    expect(() => fmtCurrency(1, { rate: Number.NaN })).toThrow(/positive finite/);
   });
 });
