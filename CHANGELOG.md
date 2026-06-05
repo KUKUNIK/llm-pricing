@@ -4,6 +4,16 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 
 ## [Unreleased]
 
+### Added
+
+- `llm-cost calc --currency <code> --rate <n>` shows the breakdown
+  total in a second currency at a user-supplied USD-relative rate.
+  The package still bundles no live FX data.
+- Library: `fmtCurrency(usd, { rate, symbol?, fractionDigits? })` and
+  the `CurrencyOptions` type exported from `lib/format.js`.
+- JSON output of `calc` gains a `currency: { code, rate, totalAmount }`
+  field when both flags are supplied.
+
 ## [0.2.0] - 2026-06-03
 
 ### Added
